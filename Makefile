@@ -14,10 +14,33 @@ init:
 	@if [ ! -f .env ]; then cp .env.example .env && echo "Created .env from .env.example — set HERMES_API_KEY before starting"; fi
 
 start:
-	$(PYTHON) -m hermes_a2a
+	@if launchctl list 2>/dev/null | grep -q $(LABEL); then \
+		echo "hermes-a2a is already running (launchd service)"; \
+	elif [ -f $(PLIST) ]; then \
+		echo "Starting hermes-a2a (launchd)..."; \
+		launchctl load -w $(PLIST); \
+		sleep 1; \
+		if launchctl list 2>/dev/null | grep -q $(LABEL); then \
+			echo "hermes-a2a started"; \
+		else \
+			echo "hermes-a2a failed to start — check logs/hermes-a2a.error.log"; \
+		fi; \
+	else \
+		$(PYTHON) -m hermes_a2a; \
+	fi
 
 stop:
-	pkill -f "python -m hermes_a2a" || true
+	@if launchctl list 2>/dev/null | grep -q $(LABEL); then \
+		echo "Stopping hermes-a2a (launchd)..."; \
+		launchctl unload $(PLIST); \
+		echo "hermes-a2a stopped"; \
+	elif pgrep -f "python -m hermes_a2a" > /dev/null 2>&1; then \
+		echo "Stopping hermes-a2a..."; \
+		pkill -f "python -m hermes_a2a"; \
+		echo "hermes-a2a stopped"; \
+	else \
+		echo "hermes-a2a is not running"; \
+	fi
 
 restart: stop start
 

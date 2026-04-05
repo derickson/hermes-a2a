@@ -48,7 +48,7 @@ def build_agent_card(host: str, port: int) -> AgentCard:
         capabilities=AgentCapabilities(
             streaming=True,
             push_notifications=False,
-            state_transition_history=True,
+            state_transition_history=False,
         ),
         skills=skills,
     )
