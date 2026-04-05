@@ -1,8 +1,10 @@
-VENV_DIR := $(HOME)/dev/.venvs/hermes-a2a
-PYTHON   := $(VENV_DIR)/bin/python
-UV       := uv
+VENV_DIR  := $(HOME)/dev/.venvs/hermes-a2a
+PYTHON    := $(VENV_DIR)/bin/python
+UV        := uv
+PLIST     := $(HOME)/Library/LaunchAgents/com.dave.hermes-a2a.plist
+LABEL     := com.dave.hermes-a2a
 
-.PHONY: init start stop restart test clean
+.PHONY: init start stop restart test clean service-load service-unload service-start service-stop service-restart logs
 
 init:
 	mkdir -p $(VENV_DIR)
@@ -24,3 +26,23 @@ test:
 
 clean:
 	rm -rf __pycache__ hermes_a2a/__pycache__ tests/__pycache__ .pytest_cache dist *.egg-info
+
+# ── launchd service management ─────────────────────────────────────────────
+service-load:
+	mkdir -p logs
+	launchctl load -w $(PLIST)
+
+service-unload:
+	launchctl unload $(PLIST)
+
+service-start:
+	launchctl start $(LABEL)
+
+service-stop:
+	launchctl stop $(LABEL)
+
+service-restart:
+	launchctl stop $(LABEL) && sleep 1 && launchctl start $(LABEL)
+
+logs:
+	tail -f logs/hermes-a2a.log
