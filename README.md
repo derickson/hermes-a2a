@@ -1,5 +1,8 @@
 # hermes-a2a
 
+<img width="1344" height="752" alt="image" src="https://github.com/user-attachments/assets/d462e26d-507f-4213-843b-1b05f558d4ea" />
+
+
 An [Agent-to-Agent (A2A) protocol](https://a2a-protocol.org/) server that bridges to the local Hermes agent. Any A2A-compatible client can discover and communicate with Hermes through this server without needing to speak the OpenAI API directly.
 
 ## How it works
