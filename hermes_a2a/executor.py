@@ -6,7 +6,7 @@ from a2a.server.tasks import TaskUpdater
 from a2a.types import Part, TextPart
 from a2a.utils.message import get_message_text
 
-from hermes_a2a.file_utils import build_file_part, detect_file_paths
+from hermes_a2a.file_utils import build_file_part, detect_file_paths, replace_file_paths
 from hermes_a2a.hermes_client import HermesClient
 
 logger = logging.getLogger(__name__)
@@ -39,48 +39,36 @@ class HermesAgentExecutor(AgentExecutor):
 
             await updater.start_work()
 
-            chunks: list[str] = []
             artifact_id = f"response-{context.task_id}"
-            first_chunk = True
+            chunks: list[str] = []
 
             async for chunk in self._client.stream(messages, session_id=session_id):
                 chunks.append(chunk)
-                parts = [Part(root=TextPart(kind="text", text=chunk))]
-                if first_chunk:
-                    await updater.add_artifact(
-                        parts=parts,
-                        artifact_id=artifact_id,
-                        name="response",
-                        append=False,
-                        last_chunk=False,
-                    )
-                    first_chunk = False
-                else:
-                    await updater.add_artifact(
-                        parts=parts,
-                        artifact_id=artifact_id,
-                        append=True,
-                        last_chunk=False,
-                    )
 
             if chunks:
                 full_text = "".join(chunks)
-                file_parts = [
-                    build_file_part(p, self._public_url)
-                    for p in detect_file_paths(full_text)
-                ]
-                final_parts = file_parts if file_parts else [Part(root=TextPart(kind="text", text=""))]
+                file_paths = detect_file_paths(full_text)
+                display_text = replace_file_paths(full_text, file_paths) if file_paths else full_text
+                file_parts = [build_file_part(p, self._public_url) for p in file_paths]
+                parts: list[Part] = [Part(root=TextPart(kind="text", text=display_text))] + file_parts
                 await updater.add_artifact(
-                    parts=final_parts,
+                    parts=parts,
                     artifact_id=artifact_id,
-                    append=True,
+                    name="response",
+                    append=False,
                     last_chunk=True,
                 )
             else:
                 # Hermes returned nothing — fall back to non-streaming
                 response_text = await self._client.complete(messages, session_id=session_id)
+                full_text = response_text
+                file_paths = detect_file_paths(full_text)
+                display_text = replace_file_paths(full_text, file_paths) if file_paths else full_text
+                file_parts = [build_file_part(p, self._public_url) for p in file_paths]
+                parts = [Part(root=TextPart(kind="text", text=display_text))] + file_parts
                 await updater.add_artifact(
-                    parts=[Part(root=TextPart(kind="text", text=response_text))],
+                    parts=parts,
+                    artifact_id=artifact_id,
                     name="response",
                     last_chunk=True,
                 )

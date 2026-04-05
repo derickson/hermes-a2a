@@ -41,3 +41,11 @@ def build_file_part(path: str, public_url: str) -> Part:
             ),
         )
     )
+
+
+def replace_file_paths(text: str, paths: list[str]) -> str:
+    """Replace each file path in *text* with an inline attachment reference."""
+    for path in paths:
+        name = os.path.basename(path)
+        text = text.replace(path, f"*see attachment for {name}*")
+    return text
