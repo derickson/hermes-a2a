@@ -89,6 +89,7 @@ Edit `.env` (created from `.env.example` during `make init`):
 | `A2A_HOST` | `0.0.0.0` | Bind address |
 | `A2A_PORT` | `9000` | Listen port |
 | `A2A_LOG_LEVEL` | `info` | Log level (`debug`, `info`, `warning`, `error`) |
+| `A2A_PUBLIC_URL` | *(auto)* | Public base URL for file attachment URIs (e.g. `https://example.com/hermes-a2a`). Defaults to `http://<A2A_HOST>:<A2A_PORT>`. Set this when running behind a reverse proxy. |
 
 ## Running without the service
 
